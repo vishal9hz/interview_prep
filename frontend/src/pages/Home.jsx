@@ -17,7 +17,20 @@ export default function Home() {
   const [serverAwake, setServerAwake] = useState(true);
 
   useEffect(() => {
-    checkHealth().then(r => setServerAwake(!!r));
+    let intervalId;
+    const verifyHealth = async () => {
+      const res = await checkHealth();
+      if (res?.status === 'ok') {
+        setServerAwake(true);
+        if (intervalId) clearInterval(intervalId);
+      } else {
+        setServerAwake(false);
+      }
+    };
+
+    verifyHealth();
+    intervalId = setInterval(verifyHealth, 4000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const toggleFocus = (f) => {

@@ -9,15 +9,24 @@ import progressRouter from './routes/progress.js';
 const app = express();
 
 const allowedOrigins = [
-  process.env.ALLOWED_ORIGIN,
+  process.env.ALLOWED_ORIGIN?.replace(/\/$/, ''),
   'http://localhost:5173',
   'http://localhost:4173',
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
+    if (!origin) return cb(null, true);
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (
+      !process.env.ALLOWED_ORIGIN ||
+      process.env.ALLOWED_ORIGIN === '*' ||
+      allowedOrigins.includes(cleanOrigin) ||
+      cleanOrigin.endsWith('.onrender.com')
+    ) {
+      return cb(null, true);
+    }
+    cb(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
 }));
